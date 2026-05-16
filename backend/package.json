@@ -1,11 +1,10 @@
-// backend/package.json
 {
   "name": "fcommerce-backend",
   "version": "1.0.0",
   "scripts": {
-    "start:dev": "nest start --watch",
-    "start:prod": "node dist/main",
-    "build": "nest build"
+    "build": "nest build",
+    "start": "node dist/main.js",
+    "dev": "nest start --watch"
   },
   "dependencies": {
     "@nestjs/common": "^10.0.0",
@@ -13,17 +12,17 @@
     "@nestjs/platform-express": "^10.0.0",
     "@nestjs/typeorm": "^10.0.0",
     "@nestjs/jwt": "^10.0.0",
-    "@nestjs/passport": "^10.0.0",
-    "@nestjs/bull": "^10.0.0",
     "@nestjs/config": "^3.0.0",
     "typeorm": "^0.3.17",
     "pg": "^8.11.0",
-    "redis": "^4.6.0",
-    "bull": "^4.11.0",
     "bcryptjs": "^2.4.3",
     "class-validator": "^0.14.0",
-    "class-transformer": "^0.5.1",
-    "axios": "^1.5.0",
-    "passport-jwt": "^4.0.1"
+    "class-transformer": "^0.5.1"
+  },
+  "devDependencies": {
+    "@nestjs/cli": "^10.0.0",
+    "@nestjs/schematics": "^10.0.0",
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
   }
 }
