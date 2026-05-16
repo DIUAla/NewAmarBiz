@@ -1,0 +1,69 @@
+// backend/src/entities/facebook-comment.entity.ts
+import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, ManyToOne, OneToOne } from 'typeorm';
+import { FacebookPage } from './facebook-page.entity';
+import { Order } from './order.entity';
+
+export enum CommentStatus {
+  PENDING = 'pending',
+  PROCESSED = 'processed',
+  IGNORED = 'ignored',
+  ORDER_CREATED = 'order_created',
+}
+
+@Entity('facebook_comments')
+export class FacebookComment {
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
+
+  @Column()
+  facebookCommentId: string;
+
+  @Column()
+  facebookPostId: string;
+
+  @Column()
+  fromName: string;
+
+  @Column()
+  fromId: string;
+
+  @Column({ type: 'text' })
+  message: string;
+
+  @Column({ type: 'jsonb', nullable: true })
+  attachment: {
+    type: string;
+    url: string;
+  };
+
+  @Column({ type: 'enum', enum: CommentStatus, default: CommentStatus.PENDING })
+  status: CommentStatus;
+
+  @Column({ type: 'jsonb', nullable: true })
+  extractedData: {
+    productName?: string;
+    quantity?: number;
+    variant?: string;
+    phone?: string;
+    address?: string;
+    confidence?: number;
+  };
+
+  @ManyToOne(() => FacebookPage, page => page.comments)
+  page: FacebookPage;
+
+  @Column()
+  pageId: string;
+
+  @OneToOne(() => Order, order => order.facebookComment)
+  order: Order;
+
+  @Column({ nullable: true })
+  orderId: string;
+
+  @Column({ type: 'timestamp' })
+  commentedAt: Date;
+
+  @CreateDateColumn()
+  createdAt: Date;
+}

@@ -1,0 +1,222 @@
+// frontend/app/page.tsx
+'use client';
+
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { useAuth } from '@/hooks/useAuth';
+
+export default function LandingPage() {
+  const [isLogin, setIsLogin] = useState(true);
+  const router = useRouter();
+  const { login, register, isLoading } = useAuth();
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    
+    if (isLogin) {
+      const success = await login({
+        email: formData.get('email') as string,
+        password: formData.get('password') as string,
+      });
+      if (success) router.push('/dashboard');
+    } else {
+      const success = await register({
+        name: formData.get('name') as string,
+        email: formData.get('email') as string,
+        phone: formData.get('phone') as string,
+        password: formData.get('password') as string,
+      });
+      if (success) router.push('/dashboard');
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+      {/* Navigation */}
+      <nav className="bg-white shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center">
+              <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                F-Commerce
+              </span>
+              <span className="ml-2 text-sm text-gray-500">Beta</span>
+            </div>
+            <div className="hidden md:flex space-x-8">
+              <a href="#features" className="text-gray-700 hover:text-blue-600">Features</a>
+              <a href="#pricing" className="text-gray-700 hover:text-blue-600">Pricing</a>
+              <a href="#contact" className="text-gray-700 hover:text-blue-600">Contact</a>
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      {/* Hero Section */}
+      <section className="py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid md:grid-cols-2 gap-12 items-center">
+            <div>
+              <h1 className="text-5xl font-bold text-gray-900 mb-6">
+                Smart Business OS for{' '}
+                <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                  Facebook Sellers
+                </span>
+              </h1>
+              <p className="text-xl text-gray-600 mb-8">
+                AI-powered platform to manage orders, customers, deliveries, and get intelligent insights. 
+                Built for Bangladeshi e-commerce businesses.
+              </p>
+              <div className="flex space-x-4">
+                <button
+                  onClick={() => document.getElementById('auth')?.scrollIntoView({ behavior: 'smooth' })}
+                  className="px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                >
+                  Start Free Trial
+                </button>
+                <button className="px-8 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition">
+                  Watch Demo
+                </button>
+              </div>
+              <div className="mt-8 flex items-center space-x-4 text-sm text-gray-500">
+                <span>✓ No credit card required</span>
+                <span>✓ 14-day free trial</span>
+                <span>✓ Cancel anytime</span>
+              </div>
+            </div>
+            <div className="relative">
+              <div className="bg-white rounded-2xl shadow-xl p-6">
+                <div className="flex items-center space-x-2 mb-4">
+                  <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                  <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                  <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                </div>
+                <div className="space-y-4">
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <p className="text-sm text-gray-600">Today's Orders</p>
+                    <p className="text-2xl font-bold">47</p>
+                  </div>
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <p className="text-sm text-gray-600">Revenue</p>
+                    <p className="text-2xl font-bold">৳ 48,250</p>
+                  </div>
+                  <div className="bg-gradient-to-r from-blue-500 to-indigo-500 rounded-lg p-4 text-white">
+                    <p className="text-sm opacity-90">AI Insight</p>
+                    <p className="text-sm">📈 Orders predicted to increase 23% this week</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Features Section */}
+      <section id="features" className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Everything You Need to Scale</h2>
+            <p className="text-xl text-gray-600">From manual tracking to AI-powered automation</p>
+          </div>
+          <div className="grid md:grid-cols-3 gap-8">
+            <div className="p-6 border rounded-xl hover:shadow-lg transition">
+              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
+                📦
+              </div>
+              <h3 className="text-xl font-semibold mb-2">Order Management</h3>
+              <p className="text-gray-600">Track orders from pending to delivery. Bulk import from Facebook comments.</p>
+            </div>
+            <div className="p-6 border rounded-xl hover:shadow-lg transition">
+              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4">
+                🤖
+              </div>
+              <h3 className="text-xl font-semibold mb-2">AI Analytics</h3>
+              <p className="text-gray-600">Detect fake orders, predict delivery success, forecast sales.</p>
+            </div>
+            <div className="p-6 border rounded-xl hover:shadow-lg transition">
+              <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
+                🚚
+              </div>
+              <h3 className="text-xl font-semibold mb-2">Delivery Integration</h3>
+              <p className="text-gray-600">Connect with Pathao, Steadfast, and major couriers.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Auth Section */}
+      <section id="auth" className="py-20">
+        <div className="max-w-md mx-auto px-4">
+          <div className="bg-white rounded-2xl shadow-xl p-8">
+            <div className="flex space-x-4 mb-8">
+              <button
+                onClick={() => setIsLogin(true)}
+                className={`flex-1 py-2 text-center font-semibold rounded-lg transition ${
+                  isLogin ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600'
+                }`}
+              >
+                Login
+              </button>
+              <button
+                onClick={() => setIsLogin(false)}
+                className={`flex-1 py-2 text-center font-semibold rounded-lg transition ${
+                  !isLogin ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600'
+                }`}
+              >
+                Register
+              </button>
+            </div>
+            
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {!isLogin && (
+                <input
+                  type="text"
+                  name="name"
+                  placeholder="Full Name"
+                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+              )}
+              <input
+                type="email"
+                name="email"
+                placeholder="Email Address"
+                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
+              />
+              {!isLogin && (
+                <input
+                  type="tel"
+                  name="phone"
+                  placeholder="Phone Number"
+                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              )}
+              <input
+                type="password"
+                name="password"
+                placeholder="Password"
+                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
+              />
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
+              >
+                {isLoading ? 'Please wait...' : isLogin ? 'Login' : 'Create Account'}
+              </button>
+            </form>
+            
+            {isLogin && (
+              <p className="mt-4 text-center text-sm text-gray-600">
+                New to F-Commerce? <button onClick={() => setIsLogin(false)} className="text-blue-600">Create an account</button>
+              </p>
+            )}
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+}

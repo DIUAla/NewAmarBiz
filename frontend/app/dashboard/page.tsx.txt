@@ -1,0 +1,52 @@
+// frontend/app/dashboard/page.tsx
+'use client';
+
+import { useEffect, useState } from 'react';
+import { useAuth } from '@/hooks/useAuth';
+import { useRouter } from 'next/navigation';
+import DashboardLayout from '@/components/DashboardLayout';
+import DashboardStats from '@/components/DashboardStats';
+import RecentOrders from '@/components/RecentOrders';
+import AIInsights from '@/components/AIInsights';
+import SalesChart from '@/components/SalesChart';
+import { useDashboard } from '@/hooks/useDashboard';
+
+export default function DashboardPage() {
+  const { user, isAuthenticated } = useAuth();
+  const router = useRouter();
+  const { data, isLoading } = useDashboard();
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      router.push('/');
+    }
+  }, [isAuthenticated, router]);
+
+  if (!user) return null;
+
+  return (
+    <DashboardLayout>
+      <div className="p-6">
+        <div className="mb-8">
+          <h1 className="text-2xl font-bold text-gray-900">Welcome back, {user.name}!</h1>
+          <p className="text-gray-600">Here's what's happening with your business today.</p>
+        </div>
+
+        <DashboardStats data={data?.summary} isLoading={isLoading} />
+        
+        <div className="grid lg:grid-cols-3 gap-6 mt-6">
+          <div className="lg:col-span-2">
+            <SalesChart data={data?.charts?.dailySales} isLoading={isLoading} />
+          </div>
+          <div>
+            <AIInsights data={data?.aiInsights} isLoading={isLoading} />
+          </div>
+        </div>
+
+        <div className="mt-6">
+          <RecentOrders orders={data?.recentOrders} isLoading={isLoading} />
+        </div>
+      </div>
+    </DashboardLayout>
+  );
+}

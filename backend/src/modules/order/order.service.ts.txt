@@ -1,0 +1,215 @@
+// backend/src/modules/order/order.service.ts
+import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository, Between, MoreThanOrEqual, LessThanOrEqual } from 'typeorm';
+import { InjectQueue } from '@nestjs/bull';
+import { Queue } from 'bull';
+import { Order, OrderStatus, PaymentStatus } from '../../entities/order.entity';
+import { User } from '../../entities/user.entity';
+import { Customer } from '../../entities/customer.entity';
+import { v4 as uuidv4 } from 'uuid';
+
+@Injectable()
+export class OrderService {
+  constructor(
+    @InjectRepository(Order)
+    private orderRepository: Repository<Order>,
+    @InjectRepository(User)
+    private userRepository: Repository<User>,
+    @InjectRepository(Customer)
+    private customerRepository: Repository<Customer>,
+    @InjectQueue('ai-processing')
+    private aiQueue: Queue,
+  ) {}
+
+  async createOrder(
+    userId: string,
+    createOrderDto: {
+      customer: {
+        name: string;
+        phone: string;
+        address: string;
+        city: string;
+        area: string;
+      };
+      items: Array<{
+        productId: string;
+        productName: string;
+        quantity: number;
+        price: number;
+        sku: string;
+      }>;
+      totalAmount: number;
+      deliveryFee?: number;
+      discount?: number;
+      facebookCommentId?: string;
+      facebookPostId?: string;
+    },
+  ): Promise<Order> {
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+    
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    // Check order limit
+    const currentMonthOrders = await this.getCurrentMonthOrderCount(userId);
+    if (currentMonthOrders >= user.monthlyOrderLimit && user.subscriptionPlan === 'free') {
+      throw new BadRequestException('Monthly order limit reached. Please upgrade your plan.');
+    }
+
+    // Find or create customer
+    let customer = await this.customerRepository.findOne({
+      where: {
+        userId,
+        phone: createOrderDto.customer.phone,
+      },
+    });
+
+    if (!customer) {
+      customer = this.customerRepository.create({
+        userId,
+        name: createOrderDto.customer.name,
+        phone: createOrderDto.customer.phone,
+        address: createOrderDto.customer.address,
+        city: createOrderDto.customer.city,
+        area: createOrderDto.customer.area,
+        totalOrders: 0,
+        totalSpent: 0,
+      });
+      await this.customerRepository.save(customer);
+    }
+
+    // Create order
+    const order = this.orderRepository.create({
+      userId,
+      customerId: customer.id,
+      orderNumber: `ORD-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+      items: createOrderDto.items,
+      totalAmount: createOrderDto.totalAmount,
+      deliveryFee: createOrderDto.deliveryFee || 0,
+      discount: createOrderDto.discount || 0,
+      status: OrderStatus.PENDING,
+      paymentStatus: PaymentStatus.PENDING,
+      shippingAddress: {
+        name: createOrderDto.customer.name,
+        phone: createOrderDto.customer.phone,
+        address: createOrderDto.customer.address,
+        city: createOrderDto.customer.city,
+        area: createOrderDto.customer.area,
+      },
+      facebookCommentId: createOrderDto.facebookCommentId,
+      facebookPostId: createOrderDto.facebookPostId,
+    });
+
+    // Update customer stats
+    customer.totalOrders += 1;
+    customer.totalSpent += createOrderDto.totalAmount;
+    customer.lastOrderAt = new Date();
+    await this.customerRepository.save(customer);
+
+    // Update user order count
+    user.ordersThisMonth += 1;
+    await this.userRepository.save(user);
+
+    const savedOrder = await this.orderRepository.save(order);
+
+    // Trigger AI analysis
+    await this.aiQueue.add('analyze-order', {
+      orderId: savedOrder.id,
+      userId,
+    });
+
+    return savedOrder;
+  }
+
+  async updateOrderStatus(orderId: string, userId: string, status: OrderStatus): Promise<Order> {
+    const order = await this.orderRepository.findOne({
+      where: { id: orderId, userId },
+    });
+
+    if (!order) {
+      throw new NotFoundException('Order not found');
+    }
+
+    order.status = status;
+    
+    if (status === OrderStatus.DELIVERED) {
+      order.deliveredAt = new Date();
+      order.paymentStatus = PaymentStatus.PAID;
+    }
+
+    await this.orderRepository.save(order);
+
+    // Trigger AI for delivery analysis
+    if (status === OrderStatus.DELIVERED || status === OrderStatus.CANCELLED) {
+      await this.aiQueue.add('analyze-delivery', {
+        orderId: order.id,
+        userId,
+        outcome: status,
+      });
+    }
+
+    return order;
+  }
+
+  async getOrders(
+    userId: string,
+    filters: {
+      status?: OrderStatus;
+      startDate?: Date;
+      endDate?: Date;
+      page?: number;
+      limit?: number;
+    },
+  ): Promise<{ orders: Order[]; total: number }> {
+    const where: any = { userId };
+    
+    if (filters.status) {
+      where.status = filters.status;
+    }
+    
+    if (filters.startDate && filters.endDate) {
+      where.createdAt = Between(filters.startDate, filters.endDate);
+    }
+
+    const page = filters.page || 1;
+    const limit = filters.limit || 20;
+
+    const [orders, total] = await this.orderRepository.findAndCount({
+      where,
+      relations: ['customer'],
+      order: { createdAt: 'DESC' },
+      skip: (page - 1) * limit,
+      take: limit,
+    });
+
+    return { orders, total };
+  }
+
+  async getOrder(orderId: string, userId: string): Promise<Order> {
+    const order = await this.orderRepository.findOne({
+      where: { id: orderId, userId },
+      relations: ['customer', 'user'],
+    });
+
+    if (!order) {
+      throw new NotFoundException('Order not found');
+    }
+
+    return order;
+  }
+
+  private async getCurrentMonthOrderCount(userId: string): Promise<number> {
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+
+    return await this.orderRepository.count({
+      where: {
+        userId,
+        createdAt: Between(startOfMonth, endOfMonth),
+      },
+    });
+  }
+}

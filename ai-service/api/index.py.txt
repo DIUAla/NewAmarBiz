@@ -1,0 +1,28 @@
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+import os
+import json
+from mangum import Mangum  # Required for AWS Lambda (Vercel uses this)
+
+app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Your existing AI endpoints...
+@app.get("/api/health")
+async def health():
+    return {"status": "healthy"}
+
+@app.get("/api/analytics/{user_id}")
+async def get_analytics(user_id: str):
+    # Your existing analytics logic
+    return {"detective": {}, "predictive": {}, "prescriptive": {}}
+
+# Handler for Vercel
+handler = Mangum(app)

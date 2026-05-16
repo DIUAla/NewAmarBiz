@@ -1,0 +1,90 @@
+// frontend/components/DashboardStats.tsx
+'use client';
+
+import { CurrencyTakaIcon, ShoppingBagIcon, ClockIcon, TruckIcon } from '@heroicons/react/24/outline';
+
+interface StatsProps {
+  data?: {
+    totalRevenue: number;
+    totalOrders: number;
+    pendingOrders: number;
+    deliveredOrders: number;
+    averageOrderValue: number;
+  };
+  isLoading: boolean;
+}
+
+export default function DashboardStats({ data, isLoading }: StatsProps) {
+  const stats = [
+    {
+      name: 'Total Revenue',
+      value: data?.totalRevenue || 0,
+      icon: CurrencyTakaIcon,
+      change: '+12%',
+      changeType: 'positive',
+      prefix: '৳',
+    },
+    {
+      name: 'Total Orders',
+      value: data?.totalOrders || 0,
+      icon: ShoppingBagIcon,
+      change: '+8%',
+      changeType: 'positive',
+    },
+    {
+      name: 'Pending Orders',
+      value: data?.pendingOrders || 0,
+      icon: ClockIcon,
+      change: '-3%',
+      changeType: 'negative',
+    },
+    {
+      name: 'Delivered',
+      value: data?.deliveredOrders || 0,
+      icon: TruckIcon,
+      change: '+15%',
+      changeType: 'positive',
+    },
+  ];
+
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {[...Array(4)].map((_, i) => (
+          <div key={i} className="bg-white rounded-xl p-6 shadow-sm animate-pulse">
+            <div className="h-4 bg-gray-200 rounded w-24 mb-4"></div>
+            <div className="h-8 bg-gray-200 rounded w-32"></div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      {stats.map((stat) => (
+        <div key={stat.name} className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-500 mb-1">{stat.name}</p>
+              <p className="text-2xl font-bold text-gray-900">
+                {stat.prefix}{typeof stat.value === 'number' ? stat.value.toLocaleString() : stat.value}
+              </p>
+            </div>
+            <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center">
+              <stat.icon className="w-5 h-5 text-blue-600" />
+            </div>
+          </div>
+          {stat.change && (
+            <div className="mt-2">
+              <span className={`text-sm ${stat.changeType === 'positive' ? 'text-green-600' : 'text-red-600'}`}>
+                {stat.change}
+              </span>
+              <span className="text-xs text-gray-500 ml-1">vs last month</span>
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}

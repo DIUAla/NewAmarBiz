@@ -1,0 +1,96 @@
+// frontend/app/facebook/callback/page.tsx
+'use client';
+
+import { useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useAuth } from '@/hooks/useAuth';
+
+export default function FacebookCallback() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const { token } = useAuth();
+  const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
+  const [message, setMessage] = useState('Connecting to Facebook...');
+
+  useEffect(() => {
+    const code = searchParams.get('code');
+    
+    if (!code) {
+      setStatus('error');
+      setMessage('No authorization code received');
+      return;
+    }
+
+    const exchangeCode = async () => {
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/facebook/callback`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            code,
+            redirectUri: window.location.origin + '/facebook/callback',
+          }),
+        });
+
+        const data = await response.json();
+        
+        if (response.ok) {
+          setStatus('success');
+          setMessage('Successfully connected! Redirecting...');
+          
+          // Get user pages
+          await fetch(`${process.env.NEXT_PUBLIC_API_URL}/facebook/pages?accessToken=${data.access_token}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          
+          setTimeout(() => {
+            router.push('/dashboard?tab=facebook');
+          }, 2000);
+        } else {
+          throw new Error(data.message || 'Failed to connect');
+        }
+      } catch (error) {
+        setStatus('error');
+        setMessage(error instanceof Error ? error.message : 'Failed to connect Facebook');
+      }
+    };
+
+    exchangeCode();
+  }, [searchParams, token, router]);
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="text-center">
+        {status === 'loading' && (
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+        )}
+        {status === 'success' && (
+          <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+        )}
+        {status === 'error' && (
+          <div className="w-12 h-12 bg-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </div>
+        )}
+        <p className="text-gray-700">{message}</p>
+        {status === 'error' && (
+          <button
+            onClick={() => router.push('/dashboard')}
+            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          >
+            Go to Dashboard
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
