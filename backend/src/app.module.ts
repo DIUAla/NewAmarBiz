@@ -44,7 +44,6 @@ import { AiModule } from './modules/ai/ai.module';
     ProductModule,
     DeliveryModule,
     DashboardModule,
-    SubscriptionModule,
     AiModule,
   ],
 })
