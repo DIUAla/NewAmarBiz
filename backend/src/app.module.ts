@@ -9,7 +9,6 @@ import { CustomerModule } from './modules/customer/customer.module';
 import { ProductModule } from './modules/product/product.module';
 import { DeliveryModule } from './modules/delivery/delivery.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
-import { SubscriptionModule } from './modules/subscription/subscription.module';
 import { AiModule } from './modules/ai/ai.module';
 
 @Module({
