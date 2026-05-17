@@ -7,11 +7,11 @@ async function bootstrap() {
   app.setGlobalPrefix('api');
   
   app.getHttpAdapter().get('/health', (req, res) => {
-    res.send({ status: 'ok', message: 'F-Commerce API is running!' });
+    res.send({ status: 'ok', message: 'API is working!' });
   });
   
-  await app.listen(process.env.PORT || 3000);
-  console.log(`Backend running on port ${process.env.PORT || 3000}`);
+  await app.listen(3000);
+  console.log('Backend running');
 }
 
 bootstrap();
