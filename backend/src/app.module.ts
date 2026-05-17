@@ -1,50 +1,8 @@
-// backend/src/app.module.ts
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import { BullModule } from '@nestjs/bull';
-import { AuthModule } from './modules/auth/auth.module';
-import { OrderModule } from './modules/order/order.module';
-import { CustomerModule } from './modules/customer/customer.module';
-import { ProductModule } from './modules/product/product.module';
-import { DeliveryModule } from './modules/delivery/delivery.module';
-import { DashboardModule } from './modules/dashboard/dashboard.module';
-import { AiModule } from './modules/ai/ai.module';
 
 @Module({
-  imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
-    TypeOrmModule.forRootAsync({
-      imports: [ConfigModule],
-      useFactory: (configService: ConfigService) => ({
-        type: 'postgres',
-        host: configService.get('DB_HOST', 'localhost'),
-        port: configService.get('DB_PORT', 5432),
-        username: configService.get('DB_USER', 'postgres'),
-        password: configService.get('DB_PASSWORD', 'postgres'),
-        database: configService.get('DB_NAME', 'fcommerce'),
-        entities: [__dirname + '/**/*.entity{.ts,.js}'],
-        synchronize: configService.get('NODE_ENV') !== 'production',
-      }),
-      inject: [ConfigService],
-    }),
-    BullModule.forRootAsync({
-      imports: [ConfigModule],
-      useFactory: (configService: ConfigService) => ({
-        redis: {
-          host: configService.get('REDIS_HOST', 'localhost'),
-          port: configService.get('REDIS_PORT', 6379),
-        },
-      }),
-      inject: [ConfigService],
-    }),
-    AuthModule,
-    OrderModule,
-    CustomerModule,
-    ProductModule,
-    DeliveryModule,
-    DashboardModule,
-    AiModule,
-  ],
+  imports: [],
+  controllers: [],
+  providers: [],
 })
 export class AppModule {}
