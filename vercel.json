@@ -1,3 +1,13 @@
-git add vercel.json
-git commit -m "Add vercel.json with experimentalServices"
-git push origin main
+{
+    "experimentalServices": {
+        "frontend": {
+            "entrypoint": "frontend",
+            "routePrefix": "/",
+            "framework": "nextjs"
+        },
+        "backend": {
+            "entrypoint": "backend",
+            "routePrefix": "/_/backend"
+        }
+    }
+}
