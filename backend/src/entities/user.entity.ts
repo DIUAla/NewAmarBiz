@@ -70,4 +70,7 @@ export class User {
 
   @OneToMany(() => Product, product => product.user)
   products: Product[];
+
+  @OneToMany(() => FacebookPage, page => page.user)
+facebookPages: FacebookPage[];
 }
