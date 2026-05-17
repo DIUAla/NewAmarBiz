@@ -1,8 +1,8 @@
-// backend/src/entities/user.entity.ts
 import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, OneToMany } from 'typeorm';
 import { Order } from './order.entity';
 import { Customer } from './customer.entity';
 import { Product } from './product.entity';
+import { FacebookPage } from './facebook-page.entity';
 
 export enum UserRole {
   ADMIN = 'admin',
@@ -72,5 +72,5 @@ export class User {
   products: Product[];
 
   @OneToMany(() => FacebookPage, page => page.user)
-facebookPages: FacebookPage[];
+  facebookPages: FacebookPage[];
 }
