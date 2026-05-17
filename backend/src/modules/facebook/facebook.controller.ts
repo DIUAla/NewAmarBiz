@@ -1,5 +1,4 @@
-// backend/src/modules/facebook/facebook.controller.ts
-import { Controller, Post, Get, Body, Param, UseGuards, Req, Query } from '@nestjs/common';
+import { Controller, Post, Get, Delete, Param, Body, UseGuards, Req, Query } from '@nestjs/common';
 import { FacebookService } from './facebook.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
@@ -55,7 +54,7 @@ export class FacebookController {
   }
 
   @Delete('pages/:pageId/auto-sync')
-  async stopAutoSync(@Param('pageId') pageId: string) {
+  async stopAutoSync(@Req() req: any, @Param('pageId') pageId: string) {
     await this.facebookService.stopAutoSync(pageId);
     return { message: 'Auto-sync stopped' };
   }
