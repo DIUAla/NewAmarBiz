@@ -1,44 +1,17 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { ValidationPipe } from '@nestjs/common';
-import { ExpressAdapter } from '@nestjs/platform-express';
-import * as express from 'express';
-
-let cachedServer: any;
 
 async function bootstrap() {
-  const expressApp = express();
-  const app = await NestFactory.create(
-    AppModule,
-    new ExpressAdapter(expressApp),
-  );
-  
-  app.enableCors({
-    origin: process.env.FRONTEND_URL || 'https://your-vercel-app.vercel.app',
-    credentials: true,
-  });
-  
-  app.useGlobalPipes(new ValidationPipe({ transform: true }));
+  const app = await NestFactory.create(AppModule);
+  app.enableCors();
   app.setGlobalPrefix('api');
   
-  await app.init();
-  return expressApp;
-}
-
-// For Vercel serverless
-export default async function handler(req: any, res: any) {
-  if (!cachedServer) {
-    cachedServer = await bootstrap();
-  }
-  cachedServer(req, res);
-}
-
-// For local development
-if (process.env.NODE_ENV !== 'production') {
-  bootstrap().then(app => {
-    const port = process.env.PORT || 5000;
-    app.listen(port, () => {
-      console.log(`Backend running on port ${port}`);
-    });
+  app.getHttpAdapter().get('/health', (req, res) => {
+    res.send({ status: 'ok', message: 'F-Commerce API is running!' });
   });
+  
+  await app.listen(process.env.PORT || 3000);
+  console.log(`Backend running on port ${process.env.PORT || 3000}`);
 }
+
+bootstrap();
